@@ -1,6 +1,5 @@
 const std = @import("std");
 const stlLoader = @import("./stl-loader-zig.zig");
-const Allocator = std.mem.Allocator;
 
 pub fn main() !void {
     // path relative to cwd

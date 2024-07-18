@@ -3,13 +3,10 @@
 A tiny simple zig library for loading STL files with support for both ASCII and binary representations. 
 
 ## Usage
-Currently to use the library you need to include the file in your project by downloading it and copying it alongside your source code. This may change when i get more familiar with zigs packaging system.
-
 Example usage provided in [example.zig](src/example.zig):
 
 ```c
 const stlLoader = @import("./stl-loader-zig.zig");
-const Allocator = std.mem.Allocator;
 
 ...
 
