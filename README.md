@@ -6,7 +6,7 @@ A tiny simple zig library for loading STL files with support for both ASCII and 
 Example usage provided in [example.zig](src/example.zig):
 
 ```c
-const stlLoader = @import("./stl-loader-zig.zig");
+const stlLoader = @import("stl-loader");
 
 ...
 
