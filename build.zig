@@ -2,8 +2,11 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
-
     const optimize = b.standardOptimizeOption(.{});
+
+    const stl_loader = b.addModule("root", .{
+        .root_source_file = b.path("src/stl-loader-zig.zig"),
+    });
 
     const exe = b.addExecutable(.{
         .name = "stl-loader-zig",
@@ -11,6 +14,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+
+    exe.root_module.addImport("stl_loader", stl_loader);
 
     b.installArtifact(exe);
 
@@ -22,6 +27,6 @@ pub fn build(b: *std.Build) void {
         run_cmd.addArgs(args);
     }
 
-    const run_step = b.step("run", "Run the app");
+    const run_step = b.step("run", "Run the example");
     run_step.dependOn(&run_cmd.step);
 }
