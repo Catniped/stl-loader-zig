@@ -2,8 +2,9 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 
 pub const Point = struct { x: f32, y: f32, z: f32 };
+pub const Vec3 = struct { i: f32, j: f32, k: f32 };
 
-pub const Triangle = struct { v1: Point, v2: Point, v3: Point };
+pub const Triangle = struct { v1: Point, v2: Point, v3: Point, normal: Vec3 = undefined };
 
 /// Dispatcher for the loader function
 /// Reads 5 bytes and passes reader to ascii/binary implementation
@@ -34,12 +35,12 @@ pub fn load_binary(allocator: Allocator, reader: anytype) ![]Triangle {
     var mesh = try allocator.alloc(Triangle, facetCount);
 
     for (0..facetCount) |i| {
-        try reader.skipBytes(12, .{});
-
+        const normal = Vec3{ .i = @as(f32, @bitCast(try reader.readInt(u32, .little))), .j = @as(f32, @bitCast(try reader.readInt(u32, .little))), .k = @as(f32, @bitCast(try reader.readInt(u32, .little))) };
         const T = Triangle{
             .v1 = Point{ .x = @as(f32, @bitCast(try reader.readInt(u32, .little))), .y = @as(f32, @bitCast(try reader.readInt(u32, .little))), .z = @as(f32, @bitCast(try reader.readInt(u32, .little))) },
             .v2 = Point{ .x = @as(f32, @bitCast(try reader.readInt(u32, .little))), .y = @as(f32, @bitCast(try reader.readInt(u32, .little))), .z = @as(f32, @bitCast(try reader.readInt(u32, .little))) },
             .v3 = Point{ .x = @as(f32, @bitCast(try reader.readInt(u32, .little))), .y = @as(f32, @bitCast(try reader.readInt(u32, .little))), .z = @as(f32, @bitCast(try reader.readInt(u32, .little))) },
+            .normal = normal,
         };
 
         mesh[i] = T;
@@ -59,9 +60,20 @@ pub fn load_ascii(allocator: Allocator, reader: anytype) ![]Triangle {
     var mesh = std.ArrayList(Triangle).init(allocator);
     defer mesh.deinit();
 
-    var o: ?[]u8 = undefined;
-    for (0..3) |_| {  o = try in_stream.readUntilDelimiterOrEof(&buf, '\n');}
-    while (o) |_| {
+    var o: ?[]u8 = try in_stream.readUntilDelimiterOrEof(&buf, '\n');
+    loop: while (o) |_| {
+        // normal
+        var normal: Vec3 = undefined;
+        if (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |b| {
+            var coords = std.mem.splitAny(u8, b, " \r");
+            if (!std.mem.eql(u8, coords.first(), "endsolid")) {
+                _ = coords.next();
+                normal = Vec3{ .i = try std.fmt.parseFloat(f32, coords.next().?), .j = try std.fmt.parseFloat(f32, coords.next().?), .k = try std.fmt.parseFloat(f32, coords.next().?) };
+            } else {break :loop;}
+        }
+
+        o = try in_stream.readUntilDelimiterOrEof(&buf, '\n');
+        // points
         var p: [3]Point = undefined;
         for (0..3) |i| {
             if (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |b| {
@@ -69,8 +81,9 @@ pub fn load_ascii(allocator: Allocator, reader: anytype) ![]Triangle {
                 _ = coords.first();
                 p[i] = Point{ .x = try std.fmt.parseFloat(f32, coords.next().?), .y = try std.fmt.parseFloat(f32, coords.next().?), .z = try std.fmt.parseFloat(f32, coords.next().?) };
         }}
-        try mesh.append(Triangle{ .v1 = p[0], .v2 = p[1], .v3 = p[2] });
-        for (0..4) |_| {  o = try in_stream.readUntilDelimiterOrEof(&buf, '\n'); }
+        try mesh.append(Triangle{ .v1 = p[0], .v2 = p[1], .v3 = p[2], .normal = normal });
+
+        for (0..2) |_| {  o = try in_stream.readUntilDelimiterOrEof(&buf, '\n'); }
     }
     return mesh.toOwnedSlice();
 }

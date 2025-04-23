@@ -24,4 +24,4 @@ defer allocator.free(mesh);
 Loading by default should be done thru dispatcher function, which takes a path for the file **relative to the cwd** and automatically chooses which implementation of the reader to use. If the type of the STL file is known at compile time, or you wish to dispatch the functions manually, **note the offsets for the reader required before calling the functions.**
 
 ## Notes
-- At the time of writing this, I am still quite new to zig, so the code may not be perfect. Feel free to suggest improvements and bugfixes in the GitHub issues!
+- Apparently normals may sometimes be left blank by the software that generates the stl files, so you may wanna recalculate them (i have not encountered this in the wild yet however)!
