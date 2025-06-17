@@ -1,5 +1,6 @@
 .{
-    .name = "stl-loader-zig",
+    .name = .stl_loader_zig,
+    .fingerprint = 0xa695685984fd1122,
     .version = "0.0.1",
     .paths = .{
         "build.zig",
